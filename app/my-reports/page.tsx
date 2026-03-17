@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import "./my-reports.css";
 
 export default function MyReports() {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,7 +29,13 @@ export default function MyReports() {
       .order("created_at", { ascending: false });
 
     if (error) console.error(error);
-    else setReports(data || []);
+    else {
+      const reportsData = data || [];
+      setReports(reportsData);
+      if (reportsData.length > 0) {
+        setSelectedReport(reportsData[0]);
+      }
+    }
     setLoading(false);
   }
 
@@ -44,79 +52,139 @@ export default function MyReports() {
     }
   };
 
-  if (loading) return <div style={{ padding: "50px" }}>Loading your reports...</div>;
+  if (loading) return <div className="loading">Loading your reports...</div>;
 
   return (
-    <div style={{ padding: "30px", maxWidth: "800px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ borderBottom: "2px solid #333", paddingBottom: "10px" }}>My Reported Issues</h1>
-
+    <div className="reports-container">
       {reports.length === 0 ? (
-        <div style={{ textAlign: "center", marginTop: "50px" }}>
+        <div className="empty-state">
           <p>You haven't reported any issues yet.</p>
-          <button onClick={() => router.push("/submit")} style={btnSubmit}>Report an Issue</button>
+          <button onClick={() => router.push("/submit")} className="btn-report">Report an Issue</button>
         </div>
       ) : (
-        reports.map((issue) => {
-          const status = getStatusStyle(issue.status);
-          return (
-            <div key={issue.id} style={cardStyle}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div className="reports-wrapper">
+          {/* Left Sidebar - List of Reports */}
+          <div className="reports-sidebar">
+            <div className="sidebar-header">
+              <h2>My Tickets</h2>
+              <p>Track your submitted reports</p>
+            </div>
+
+            <div className="reports-list">
+              {reports.map((report) => {
+                const status = getStatusStyle(report.status);
+                const isSelected = selectedReport?.id === report.id;
+                return (
+                  <div
+                    key={report.id}
+                    className={`report-list-item ${isSelected ? 'active' : ''}`}
+                    onClick={() => setSelectedReport(report)}
+                  >
+                    <div className="report-list-content">
+                      <h4 className="report-list-title">{report.title}</h4>
+                      <p className="report-list-date">
+                        {new Date(report.created_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    <span className="report-list-status" style={{ color: status.color, backgroundColor: status.bg }}>
+                      {status.label.split(' ')[0]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Side - Detailed View */}
+          {selectedReport && (
+            <div className="report-detail">
+              <div className="detail-header">
                 <div>
-                  <h3 style={{ margin: "0 0 5px 0" }}>{issue.title}</h3>
-                  <p style={{ fontSize: "14px", color: "#666" }}>Reported on: {new Date(issue.created_at).toLocaleDateString()}</p>
+                  <h1 className="detail-title">{selectedReport.title}</h1>
+                  <p className="detail-badge-text">
+                    {getStatusStyle(selectedReport.status).label.split(' ').slice(0, 2).join(' ')}
+                  </p>
                 </div>
-                <span style={{ 
-                  padding: "5px 12px", 
-                  borderRadius: "20px", 
-                  fontSize: "12px", 
-                  fontWeight: "bold", 
-                  color: status.color, 
-                  backgroundColor: status.bg,
-                  border: `1px solid ${status.color}`
-                }}>
-                  {status.label}
-                </span>
+                <button className="btn-add-comment">+ Add Comment</button>
               </div>
 
-              <p style={{ marginTop: "15px", color: "#444" }}>{issue.description}</p>
-              
-              {/* Progress Bar for the user to see how close to repair it is */}
-              {issue.status === 'approved' && (
-                <div style={{ marginTop: "15px" }}>
-                  <p style={{ fontSize: "12px", marginBottom: "5px" }}><b>Funding Progress:</b></p>
-                  <div style={{ background: "#ddd", height: "10px", borderRadius: "5px" }}>
-                    <div style={{ 
-                      width: `${(issue.current_funding / issue.funding_goal) * 100}%`, 
-                      background: "#28a745", 
-                      height: "100%", 
-                      borderRadius: "5px" 
-                    }} />
-                  </div>
+              {selectedReport.image && (
+                <div className="detail-image-container">
+                  <img src={selectedReport.image} alt="issue" className="detail-image" />
                 </div>
               )}
+
+              <div className="detail-content">
+                <div className="content-section">
+                  <h3>Description</h3>
+                  <p>{selectedReport.description}</p>
+                </div>
+
+                <div className="content-section">
+                  <p className="landmark-info">
+                    📍 {selectedReport.landmark}
+                  </p>
+                </div>
+
+                {/* Ticket Progress */}
+                <div className="progress-container">
+                  <h3>Ticket Progress</h3>
+                  <div className="progress-steps">
+                    <div className={`progress-step ${['pending', 'approved', 'in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                      <div className="progress-dot">●</div>
+                      <p>Reported</p>
+                      <span>Issue submitted by user</span>
+                    </div>
+                    <div className={`progress-step ${['approved', 'in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                      <div className="progress-dot">●</div>
+                      <p>Under Review</p>
+                      <span>Technician evaluating the report</span>
+                    </div>
+                    <div className={`progress-step ${['in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                      <div className="progress-dot">●</div>
+                      <p>Assigned</p>
+                      <span>Work assigned to contractor</span>
+                    </div>
+                    <div className={`progress-step ${['resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                      <div className="progress-dot">●</div>
+                      <p>Resolved</p>
+                      <span>Issue fixed and verified</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Funding Progress for Approved */}
+                {selectedReport.status === 'approved' && (
+                  <div className="funding-container">
+                    <h3>Funding Progress</h3>
+                    <p className="funding-text">
+                      ${selectedReport.current_funding || 0} raised of ${selectedReport.funding_goal || 0}
+                    </p>
+                    <div className="progress-bar-large">
+                      <div
+                        className="progress-fill"
+                        style={{
+                          width: `${Math.min(((selectedReport.current_funding || 0) / (selectedReport.funding_goal || 1)) * 100, 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {selectedReport.status !== 'closed' && selectedReport.status !== 'rejected' && (
+                  <p className="estimated-resolution">
+                    ⏰ Estimated resolution: {new Date(new Date(selectedReport.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
             </div>
-          );
-        })
+          )}
+        </div>
       )}
     </div>
   );
 }
-
-const cardStyle = {
-  border: "1px solid #ddd",
-  borderRadius: "12px",
-  padding: "20px",
-  marginBottom: "20px",
-  backgroundColor: "#fff",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-};
-
-const btnSubmit = {
-  backgroundColor: "#0070f3",
-  color: "white",
-  padding: "10px 20px",
-  border: "none",
-  borderRadius: "5px",
-  cursor: "pointer",
-  marginTop: "10px"
-};
