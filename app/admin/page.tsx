@@ -83,8 +83,13 @@ export default function AdminPanel() {
 
       // Calculate issues by category
       const streetLights = data.filter(i => i.title?.toLowerCase().includes('light') || i.title?.toLowerCase().includes('street')).length;
-      const potholes = data.filter(i => i.title?.toLowerCase().includes('pothole') || i.title?.toLowerCase().includes('road')).length;
-      const other = data.length - streetLights - potholes;
+      const streetLightsPercent = totalIssuesByCategory > 0
+  ? (issuesByCategory.streetLights / totalIssuesByCategory * 100)
+  : 0;
+
+const potholesPercent = totalIssuesByCategory > 0
+  ? (issuesByCategory.potholes / totalIssuesByCategory * 100)
+  : 0;
       
       setIssuesByCategory({
         streetLights,
