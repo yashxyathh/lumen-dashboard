@@ -1,165 +1,136 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation"; // Added for redirection
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { 
+  ssr: false,
+  loading: () => <p style={{ height: "300px", display: "flex", alignItems: "center", justifyContent: "center", background: "#f0f0f0", borderRadius: "10px" }}>Loading Map...</p>
+});
 
 export default function SubmitPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [landmark, setLandmark] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [location, setLocation] = useState<any>(null);
-  const [loading, setLoading] = useState(false); // Added loading state
+  
+  // Initial default (India) - will update to current location via useEffect
+  const [location, setLocation] = useState<any>({ lat: 20.5937, lng: 78.9629 }); 
+  const [isLocating, setIsLocating] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const captureLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
+  // Get current location on mount
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setIsLocating(false);
+        },
+        () => setIsLocating(false),
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setIsLocating(false);
     }
-
-    navigator.geolocation.getCurrentPosition((position) => {
-      setLocation({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      })
-    });
-  };
+  }, []);
 
   const submitIssue = async () => {
+    if (!title || !description) return alert("Please fill in Title and Description");
+    
     setLoading(true);
-
-    // --- NEW: CHECK IF USER IS LOGGED IN ---
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      alert("You must be logged in to report an issue!");
+      alert("You must be logged in!");
       setLoading(false);
       return;
     }
 
     let imageUrl = null;
-
     if (image) {
-      const fileName = Date.now() + "-" + image.name;
-      const { error: uploadError } = await supabase.storage
-        .from("issues-images")
-        .upload(fileName, image);
-
-      if (uploadError) {
-        console.error(uploadError);
-        alert("Image upload failed");
-        setLoading(false);
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from("issues-images")
-        .getPublicUrl(fileName);
-
+      const fileName = `${Date.now()}-${image.name}`;
+      const { error: upErr } = await supabase.storage.from("issues-images").upload(fileName, image);
+      if (upErr) { console.error(upErr); setLoading(false); return; }
+      const { data } = supabase.storage.from("issues-images").getPublicUrl(fileName);
       imageUrl = data.publicUrl;
     }
 
-    // --- UPDATED: ADD USER_ID AND STATUS ---
-    const { error } = await supabase
-      .from("issues")
-      .insert([
-        {
-          title: title,
-          description: description,
-          landmark: landmark,
-          latitude: location?.lat,
-          longitude: location?.lng,
-          upvotes: 0,
-          image: imageUrl,
-          user_id: user.id,      // Links issue to the person who reported it
-          status: "pending"      // Starts as pending for Admin approval
-        }
-      ]);
+    const { error } = await supabase.from("issues").insert([{
+      title, description, landmark,
+      latitude: location.lat,
+      longitude: location.lng,
+      upvotes: 0,
+      image: imageUrl,
+      user_id: user.id,
+      status: "pending"
+    }]);
 
     if (error) {
-      console.error("FULL ERROR DETAILS:", JSON.stringify(error, null, 2));
-      alert("Error submitting issue");
+      alert("Error submitting");
     } else {
-      alert("Issue submitted! It will appear on the feed once an Admin approves it.");
-      router.push("/"); // Redirect back to home
+      alert("Submitted successfully!");
+      router.push("/");
     }
     setLoading(false);
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h1>Report an Issue</h1>
-      <p style={{ color: "gray" }}>Your report will be reviewed by an Admin before appearing publicly.</p>
+    <div style={{ padding: "20px", maxWidth: "600px", margin: "auto", fontFamily: "Arial, sans-serif" }}>
+      <h1 style={{ fontSize: "24px", fontWeight: "bold" }}>Report an Issue</h1>
+      <p style={{ color: "#666", marginBottom: "20px" }}>Drag the map to position the pin exactly on the issue.</p>
 
-      <br />
+      <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        <input placeholder="Problem title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
+        <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} style={{...inputStyle, height: "80px"}} />
+        <input placeholder="Nearby Landmark" value={landmark} onChange={(e) => setLandmark(e.target.value)} style={inputStyle} />
+        
+        <input type="file" accept="image/*" capture="environment" onChange={(e) => e.target.files && setImage(e.target.files[0])} />
 
-      <input
-        placeholder="Problem title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        style={{ padding: "10px", width: "300px" }}
-      />
+        <div style={{ marginTop: "10px" }}>
+          <label style={{ fontWeight: "bold", display: "block", marginBottom: "5px" }}>
+            Location: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+          </label>
+          
+          <div style={{ height: "300px", borderRadius: "12px", overflow: "hidden", border: "2px solid #0070f3" }}>
+            {!isLocating ? (
+              <MapPicker 
+                key="fixed-map" // We use a static key here so the map doesn't unmount while dragging
+                initialLocation={location} 
+                onChange={(coords: any) => setLocation(coords)} 
+              />
+            ) : (
+              <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9f9f9" }}>
+                Detecting your location...
+              </div>
+            )}
+          </div>
+        </div>
 
-      <br /><br />
-
-      <textarea
-        placeholder="Describe the issue"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        style={{ padding: "10px", width: "300px", height: "120px" }}
-      />
-
-      <br /><br />
-      <input
-        placeholder="Landmark"
-        value={landmark}
-        onChange={(e) => setLandmark(e.target.value)}
-        style={{ padding: "10px", width: "300px" }}
-      />
-
-      <br /><br />
-
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={(e) => {
-          if (e.target.files) {
-            setImage(e.target.files[0]);
-          }
-        }}
-      />
-
-      <br /><br />
-
-      <button onClick={captureLocation}>
-        Capture Location
-      </button>
-
-      {location && (
-        <p>
-          Location captured: {location.lat.toFixed(4)} , {location.lng.toFixed(4)}
-        </p>
-      )}
-
-      <br />
-
-      <button 
-        onClick={submitIssue} 
-        disabled={loading}
-        style={{ 
-          padding: "10px 20px", 
-          backgroundColor: loading ? "#ccc" : "#0070f3", 
-          color: "white", 
-          border: "none", 
-          borderRadius: "5px",
-          cursor: loading ? "not-allowed" : "pointer"
-        }}
-      >
-        {loading ? "Submitting..." : "Submit Issue"}
-      </button>
-
+        <button 
+          onClick={submitIssue} 
+          disabled={loading} 
+          style={{ 
+            padding: "15px", 
+            backgroundColor: loading ? "#ccc" : "#0070f3", 
+            color: "white", 
+            border: "none", 
+            borderRadius: "8px", 
+            fontWeight: "bold",
+            cursor: "pointer",
+            fontSize: "16px"
+          }}
+        >
+          {loading ? "Submitting..." : "Submit Issue"}
+        </button>
+      </div>
     </div>
   );
 }
+
+const inputStyle = { padding: "12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "14px" };
