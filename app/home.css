@@ -1,0 +1,388 @@
+.home-container {
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f3f8 100%);
+  min-height: 100vh;
+}
+
+.feed-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 32px 0;
+  letter-spacing: -0.5px;
+}
+
+.filter-section {
+  display: flex;
+  gap: 12px;
+  margin: 28px 0;
+  flex-wrap: wrap;
+}
+
+.filter-dropdown {
+  padding: 11px 14px 11px 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: white;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath fill='%231a1a1a' d='M1 1.5l6 6 6-6' stroke='%231a1a1a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 36px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.filter-dropdown:hover {
+  border-color: #999;
+  background-color: #fbfbfb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.filter-dropdown:focus {
+  outline: none;
+  border-color: #2d5a5a;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(45, 90, 90, 0.1);
+}
+
+.empty-state {
+  color: #999;
+  font-size: 15px;
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.issue-card {
+  background: white;
+  border-radius: 14px;
+  padding: 0;
+  margin-top: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+
+.issue-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.issue-content-wrapper {
+  display: flex;
+  gap: 0;
+  height: 100%;
+}
+
+.issue-image-container {
+  flex-shrink: 0;
+  width: 280px;
+  height: 280px;
+  overflow: hidden;
+}
+
+.issue-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.issue-details {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-header {
+  margin-bottom: 12px;
+}
+
+.issue-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.issue-landmark {
+  color: #999;
+  font-size: 13px;
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.issue-description {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0 16px 0;
+  flex: 1;
+}
+
+.funding-section {
+  margin: 14px 0;
+}
+
+.funding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.funding-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.funding-amount {
+  font-size: 13px;
+  color: #28a745;
+  font-weight: 700;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-donate,
+.btn-tender {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-donate {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
+}
+
+.btn-donate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-tender {
+  background: linear-gradient(135deg, #0070f3 0%, #0051cc 100%);
+  color: white;
+  box-shadow: 0 1px 4px rgba(0, 112, 243, 0.2);
+}
+
+.btn-tender:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3);
+}
+
+.status-in-progress,
+.status-resolved {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-in-progress {
+  color: #f39c12;
+  background: rgba(243, 156, 18, 0.1);
+}
+
+.status-resolved {
+  color: #27ae60;
+  background: rgba(39, 174, 96, 0.1);
+}
+
+.issue-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-upvote {
+  padding: 6px 12px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.btn-upvote:hover {
+  border-color: #1a1a1a;
+  background: #f9f9f9;
+  transform: scale(1.03);
+}
+
+.vote-count {
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-indicator {
+  font-size: 11px;
+  color: #999;
+  font-style: italic;
+}
+
+.btn-delete {
+  padding: 6px 12px;
+  color: #dc3545;
+  background: white;
+  border: 1.5px solid #dc3545;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.btn-delete:hover {
+  background: rgba(220, 53, 69, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
+}
+
+@media (max-width: 768px) {
+  .issue-content-wrapper {
+    flex-direction: column;
+  }
+
+  .issue-image-container {
+    width: 100%;
+    height: 240px;
+  }
+
+  .issue-details {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-container {
+    padding: 20px 12px;
+  }
+
+  .feed-title {
+    font-size: 26px;
+    margin-bottom: 24px;
+  }
+
+  .filter-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filter-dropdown {
+    width: 100%;
+  }
+
+  .issue-card {
+    margin-top: 16px;
+  }
+
+  .issue-content-wrapper {
+    flex-direction: column;
+  }
+
+  .issue-image-container {
+    width: 100%;
+    height: 200px;
+  }
+
+  .issue-details {
+    padding: 16px;
+  }
+
+  .issue-title {
+    font-size: 17px;
+  }
+
+  .issue-description {
+    font-size: 13px;
+  }
+
+  .issue-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-left {
+    width: 100%;
+  }
+
+  .action-buttons {
+    width: 100%;
+  }
+
+  .btn-donate,
+  .btn-tender {
+    flex: 1;
+  }
+}

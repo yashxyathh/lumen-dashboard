@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import "./home.css";
 
 export default function Home() {
   const [issues, setIssues] = useState<any[]>([]);
@@ -128,104 +129,100 @@ export default function Home() {
     });
 
   return (
-    <div style={{ padding: "30px", maxWidth: "800px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1>Civic Issues Feed</h1>
+    <div className="home-container">
+      <h1 className="feed-title">Civic Issues Feed</h1>
 
-      <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-        <select value={sortType} onChange={(e) => setSortType(e.target.value)} style={{ marginRight: "10px", padding: "5px" }}>
+      <div className="filter-section">
+        <select value={sortType} onChange={(e) => setSortType(e.target.value)} className="filter-dropdown">
           <option value="newest">Newest</option>
           <option value="upvotes">Most Upvoted</option>
         </select>
 
-        <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} style={{ padding: "5px" }}>
+        <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="filter-dropdown">
           <option value="all">All Locations</option>
           <option value="nearby">Nearby Only</option>
         </select>
       </div>
 
-      {visibleIssues.length === 0 && <p style={{ color: "#666" }}>No approved issues reported yet.</p>}
+      {visibleIssues.length === 0 && <p className="empty-state">No approved issues reported yet.</p>}
 
       {visibleIssues.map((issue) => (
-        <div key={issue.id} style={{ border: "1px solid #ccc", padding: "20px", marginTop: "20px", borderRadius: "12px", backgroundColor: "#fff", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
-          {issue.image && <img src={issue.image} width="100%" alt="issue" style={{ borderRadius: "8px", maxHeight: "400px", objectFit: "cover" }} />}
-
-          <h2 style={{ marginBottom: "10px" }}>{issue.title}</h2>
-          <p style={{ color: "#444" }}>{issue.description}</p>
-          <p>📍 <b>Landmark:</b> {issue.landmark}</p>
-
-          <div style={{ marginTop: "20px", padding: "15px", backgroundColor: "#f9f9f9", borderRadius: "8px" }}>
-            <p><b>Funding Progress:</b></p>
-            <div style={{ marginTop: "10px", background: "#ddd", borderRadius: "5px", width: "100%", height: "15px" }}>
-              <div style={{ 
-                width: `${Math.min(((issue.current_funding || 0) / (issue.funding_goal || 1)) * 100, 100)}%`, 
-                background: "#28a745", 
-                height: "100%", 
-                borderRadius: "5px",
-                transition: "width 0.4s ease" 
-              }}></div>
-            </div>
-            <p style={{ fontSize: "14px", margin: "10px 0" }}>
-              ${issue.current_funding || 0} raised of ${issue.funding_goal || 0}
-            </p>
-
-            <div style={{ marginTop: "15px", display: "flex", gap: "10px", alignItems: "center" }}>
-              {(!userRole || userRole === 'user') && issue.current_funding < issue.funding_goal && (
-                <button 
-                  onClick={() => handleDonate(issue.id, issue.current_funding)}
-                  style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
-                >
-                  💰 Donate
-                </button>
-              )}
-
-              {userRole === 'contractor' && !issue.assigned_to && (
-                <button 
-                  onClick={() => router.push('/contractor')}
-                  style={{ padding: "10px 20px", backgroundColor: "#0070f3", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
-                >
-                  🏗️ Apply for Tender
-                </button>
-              )}
-
-              {issue.assigned_to && issue.status !== 'resolved' && (
-                <span style={{ padding: "10px", color: "#f39c12", fontWeight: "bold" }}>🛠️ Work in Progress...</span>
-              )}
-
-              {issue.status === 'resolved' && (
-                <span style={{ padding: "10px", color: "#27ae60", fontWeight: "bold" }}>✅ Issue Resolved!</span>
-              )}
-            </div>
-          </div>
-
-          <div style={{ marginTop: "15px", borderTop: "1px solid #eee", paddingTop: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <button onClick={() => handleUpvote(issue.id)} style={{ padding: "6px 12px", cursor: "pointer", borderRadius: "6px", border: "1px solid #aaa", background: "white" }}>
-                👍 Upvote
-              </button>
-              <span style={{ marginLeft: "10px", color: "#666" }}>{issue.upvotes || 0} votes</span>
-            </div>
-
-            {/* UPDATED: Matches user_id with currentUserId */}
-            {currentUserId && issue.user_id === currentUserId && (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "12px", color: "#999", fontStyle: "italic" }}>You reported this</span>
-                <button 
-                  onClick={() => deleteIssue(issue.id, issue.user_id)}
-                  style={{ 
-                    color: "#dc3545", 
-                    background: "none", 
-                    border: "1px solid #dc3545", 
-                    padding: "5px 12px", 
-                    borderRadius: "6px", 
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "500"
-                  }}
-                >
-                  🗑️ Delete
-                </button>
+        <div key={issue.id} className="issue-card">
+          <div className="issue-content-wrapper">
+            {issue.image && (
+              <div className="issue-image-container">
+                <img src={issue.image} alt="issue" className="issue-image" />
               </div>
             )}
+
+            <div className="issue-details">
+              <div className="issue-header">
+                <h2 className="issue-title">{issue.title}</h2>
+                <p className="issue-landmark">📍 {issue.landmark}</p>
+              </div>
+
+              <p className="issue-description">{issue.description}</p>
+
+              <div className="funding-section">
+                <div className="funding-header">
+                  <span className="funding-label">Funding Progress</span>
+                  <span className="funding-amount">
+                    ${issue.current_funding || 0} / ${issue.funding_goal || 0}
+                  </span>
+                </div>
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{
+                    width: `${Math.min(((issue.current_funding || 0) / (issue.funding_goal || 1)) * 100, 100)}%`
+                  }}></div>
+                </div>
+              </div>
+
+              <div className="issue-footer">
+                <div className="footer-left">
+                  <button onClick={() => handleUpvote(issue.id)} className="btn-upvote">
+                    👍 Upvote
+                  </button>
+                  <span className="vote-count">{issue.upvotes || 0} votes</span>
+                </div>
+
+                <div className="action-buttons">
+                  {(!userRole || userRole === 'user') && issue.current_funding < issue.funding_goal && (
+                    <button
+                      onClick={() => handleDonate(issue.id, issue.current_funding)}
+                      className="btn-donate"
+                    >
+                      💰 Donate
+                    </button>
+                  )}
+
+                  {userRole === 'contractor' && !issue.assigned_to && (
+                    <button
+                      onClick={() => router.push('/contractor')}
+                      className="btn-tender"
+                    >
+                      🏗️ Apply
+                    </button>
+                  )}
+
+                  {issue.assigned_to && issue.status !== 'resolved' && (
+                    <span className="status-in-progress">🛠️ In Progress</span>
+                  )}
+
+                  {issue.status === 'resolved' && (
+                    <span className="status-resolved">✅ Resolved</span>
+                  )}
+
+                  {currentUserId && issue.user_id === currentUserId && (
+                    <button
+                      onClick={() => deleteIssue(issue.id, issue.user_id)}
+                      className="btn-delete"
+                    >
+                      🗑️ Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       ))}
