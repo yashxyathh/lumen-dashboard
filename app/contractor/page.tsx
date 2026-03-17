@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import "./contractor.css";
 
 export default function ContractorPage() {
   const [availableJobs, setAvailableJobs] = useState<any[]>([]);
   const [myJobs, setMyJobs] = useState<any[]>([]);
-  const [myBids, setMyBids] = useState<any[]>([]); // Added state for withdrawable bids
+  const [myBids, setMyBids] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Tender Form State
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
   const [days, setDays] = useState("");
   const [materials, setMaterials] = useState("");
@@ -28,7 +28,6 @@ export default function ContractorPage() {
       return;
     }
 
-    // 1. Fetch Available Tenders (Approved & Unassigned)
     const { data: available, error: availableError } = await supabase
       .from("issues")
       .select("*")
@@ -38,16 +37,14 @@ export default function ContractorPage() {
     if (availableError) console.error("Error fetching available:", availableError);
     setAvailableJobs(available || []);
 
-    // 2. Fetch Active Jobs assigned to this contractor
     const { data: active, error: activeError } = await supabase
       .from("issues")
       .select("*")
       .eq("assigned_to", user.id);
-    
+
     if (activeError) console.error("Error fetching active:", activeError);
     setMyJobs(active || []);
 
-    // 3. Fetch Pending Bids (for the Withdraw functionality)
     const { data: bids, error: bidsError } = await supabase
       .from("contractor_bids")
       .select("*, issues(title)")
@@ -56,13 +53,13 @@ export default function ContractorPage() {
 
     if (bidsError) console.error("Error fetching bids:", bidsError);
     setMyBids(bids || []);
-    
+
     setLoading(false);
   }
 
   async function submitTender(issueId: number) {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     const { error } = await supabase
       .from("contractor_bids")
       .insert([{
@@ -82,11 +79,10 @@ export default function ContractorPage() {
       setDays("");
       setMaterials("");
       setExperience("");
-      fetchData(); // Refresh all lists
+      fetchData();
     }
   }
 
-  // NEW: Withdraw Bid function
   async function withdrawBid(bidId: number) {
     if (!confirm("Withdraw this tender proposal?")) return;
 
@@ -99,7 +95,7 @@ export default function ContractorPage() {
       alert("Error withdrawing bid");
     } else {
       alert("Bid withdrawn successfully");
-      fetchData(); 
+      fetchData();
     }
   }
 
@@ -108,7 +104,7 @@ export default function ContractorPage() {
     if (!file) return;
 
     const fileName = `resolved-${Date.now()}-${file.name}`;
-    
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("issues-images")
       .upload(fileName, file);
@@ -124,7 +120,7 @@ export default function ContractorPage() {
 
     const { error: updateError } = await supabase
       .from("issues")
-      .update({ 
+      .update({
         status: "resolved",
         resolved_image: publicUrl.publicUrl
       })
@@ -137,101 +133,157 @@ export default function ContractorPage() {
     }
   }
 
-  if (loading) return <div style={{padding: "50px"}}>Loading Contractor Portal...</div>;
+  if (loading) return <div className="loading-container">Loading Contractor Portal...</div>;
 
   return (
-    <div style={{ padding: "30px", maxWidth: "1000px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1>Contractor Portal</h1>
-      <hr />
-      
-      {/* SECTION 1: AVAILABLE TENDERS */}
-      <section style={{ marginBottom: "50px" }}>
-        <h2 style={{ color: "#0070f3" }}>🏗️ Available Tenders</h2>
-        <div style={{ display: "grid", gap: "20px" }}>
-          {availableJobs.length === 0 && <p>No new approved jobs currently available.</p>}
-          {availableJobs.map(job => (
-            <div key={job.id} style={{ border: "1px solid #ccc", padding: "20px", borderRadius: "8px" }}>
-              <h3>{job.title}</h3>
-              <p>{job.description}</p>
-              <p><b>Funding: ${job.current_funding} / ${job.funding_goal}</b></p>
-              
-              <button 
-                onClick={() => setSelectedIssue(job)} 
-                style={{ backgroundColor: "#0070f3", color: "white", padding: "10px", border: "none", borderRadius: "5px", cursor: "pointer" }}
-              >
-                Apply for Tender
-              </button>
+    <div className="contractor-container">
+      <div className="contractor-header">
+        <h1>🏗️ Contractor Portal</h1>
+        <p>Manage your tenders, proposals, and active projects</p>
+      </div>
 
-              {selectedIssue?.id === job.id && (
-                <div style={{ marginTop: "20px", background: "#f9f9f9", padding: "20px", border: "1px solid #0070f3", borderRadius: "8px" }}>
-                  <h4>Submit Your Proposal</h4>
-                  <label>Days to complete:</label>
-                  <input type="number" value={days} onChange={e => setDays(e.target.value)} style={{display: "block", width: "100%", padding: "8px", marginBottom: "10px"}} />
-                  
-                  <label>Materials needed:</label>
-                  <textarea value={materials} onChange={e => setMaterials(e.target.value)} style={{display: "block", width: "100%", padding: "8px", marginBottom: "10px"}} />
-                  
-                  <label>Why should we hire you? (Experience):</label>
-                  <textarea value={experience} onChange={e => setExperience(e.target.value)} style={{display: "block", width: "100%", padding: "8px", marginBottom: "10px"}} />
-                  
-                  <button onClick={() => submitTender(job.id)} style={{backgroundColor: "green", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer"}}>
-                    Send Tender Proposal
+      <div className="contractor-layout">
+        {/* COLUMN 1: AVAILABLE TENDERS */}
+        <div className="contractor-column">
+          <div className="column-section">
+            <div className="section-header tenders">
+              <h2>📋 Available Tenders</h2>
+            </div>
+            <div className="cards-container">
+              {availableJobs.length === 0 && <div className="empty-state">No new approved tenders available</div>}
+              {availableJobs.map(job => (
+                <div key={job.id} className="tender-card">
+                  <h3>{job.title}</h3>
+                  <p>{job.description}</p>
+                  <div className="tender-funding">
+                    <span>Funding Progress</span>
+                    <span>${job.current_funding} / ${job.funding_goal}</span>
+                  </div>
+
+                  <button
+                    className="apply-button"
+                    onClick={() => setSelectedIssue(job)}
+                  >
+                    Apply for Tender
                   </button>
-                  <button onClick={() => setSelectedIssue(null)} style={{marginLeft: "10px", background: "none", border: "none", color: "red", cursor: "pointer"}}>Cancel</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
 
-      {/* SECTION 2: PENDING PROPOSALS (WITHDRAW OPTION) */}
-      <section style={{ marginBottom: "50px" }}>
-        <h2 style={{ color: "#f39c12" }}>📑 My Pending Proposals</h2>
-        <div style={{ display: "grid", gap: "15px" }}>
-          {myBids.length === 0 && <p style={{ color: "#777" }}>No pending bids.</p>}
-          {myBids.map(bid => (
-            <div key={bid.id} style={{ border: "1px solid #f39c12", padding: "15px", borderRadius: "8px", backgroundColor: "#fffcf5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <p style={{ margin: 0 }}><b>Project:</b> {bid.issues?.title}</p>
-                <span style={{ fontSize: "12px", color: "#f39c12" }}>Status: Pending Admin Review</span>
-              </div>
-              <button 
-                onClick={() => withdrawBid(bid.id)}
-                style={{ color: "red", border: "1px solid red", background: "white", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}
-              >
-                🚫 Withdraw
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
+                  {selectedIssue?.id === job.id && (
+                    <div className="proposal-form">
+                      <h4>📝 Submit Your Proposal</h4>
+                      <div className="form-group">
+                        <label>Days to complete:</label>
+                        <input
+                          type="number"
+                          value={days}
+                          onChange={e => setDays(e.target.value)}
+                          placeholder="e.g., 5"
+                        />
+                      </div>
 
-      {/* SECTION 3: ACTIVE JOBS */}
-      <section>
-        <h2 style={{ color: "#28a745" }}>🛠️ My Active Repairs</h2>
-        <div style={{ display: "grid", gap: "20px" }}>
-          {myJobs.length === 0 && <p>You have no active projects.</p>}
-          {myJobs.map(job => (
-            <div key={job.id} style={{ border: "2px solid #28a745", padding: "20px", borderRadius: "8px" }}>
-              <h3>{job.title}</h3>
-              <p>Current Status: <b style={{color: "#28a745"}}>{job.status.toUpperCase()}</b></p>
-              
-              {job.status === 'in-progress' && (
-                <div style={{ marginTop: "15px", padding: "10px", border: "1px dashed #28a745" }}>
-                  <p><b>Finish Job:</b> Upload "After" photo to request payment</p>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={(e) => handleResolutionUpload(e, job.id)} 
-                  />
+                      <div className="form-group">
+                        <label>Materials needed:</label>
+                        <textarea
+                          value={materials}
+                          onChange={e => setMaterials(e.target.value)}
+                          placeholder="List the materials you'll need..."
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Why should we hire you?</label>
+                        <textarea
+                          value={experience}
+                          onChange={e => setExperience(e.target.value)}
+                          placeholder="Share your experience and expertise..."
+                        />
+                      </div>
+
+                      <div className="form-buttons">
+                        <button
+                          className="submit-proposal-button"
+                          onClick={() => submitTender(job.id)}
+                        >
+                          ✓ Send Proposal
+                        </button>
+                        <button
+                          className="cancel-button"
+                          onClick={() => setSelectedIssue(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {job.status === 'resolved' && <p>✅ Job complete. Admin is verifying for payment release.</p>}
+              ))}
             </div>
-          ))}
+          </div>
         </div>
-      </section>
+
+        {/* COLUMN 2: PROPOSALS + ACTIVE REPAIRS */}
+        <div className="contractor-column">
+          {/* Pending Proposals */}
+          <div className="column-section">
+            <div className="section-header proposals">
+              <h2>📑 My Proposals</h2>
+            </div>
+            <div className="cards-container">
+              {myBids.length === 0 && <div className="empty-state">No pending proposals</div>}
+              {myBids.map(bid => (
+                <div key={bid.id} className="proposal-item">
+                  <div className="proposal-info">
+                    <p><b>Project:</b> {bid.issues?.title}</p>
+                    <div className="proposal-status">⏳ Pending Admin Review</div>
+                  </div>
+                  <button
+                    className="withdraw-button"
+                    onClick={() => withdrawBid(bid.id)}
+                  >
+                    🚫 Withdraw
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Active Repairs */}
+          <div className="column-section">
+            <div className="section-header active-repairs">
+              <h2>🛠️ Active Repairs</h2>
+            </div>
+            <div className="cards-container">
+              {myJobs.length === 0 && <div className="empty-state">No active projects</div>}
+              {myJobs.map(job => (
+                <div key={job.id} className="repair-card">
+                  <h3>{job.title}</h3>
+                  <span className="status-badge">{job.status.toUpperCase()}</span>
+
+                  {job.status === 'in-progress' && (
+                    <div className="finish-job-section">
+                      <p>📸 Upload proof of work to complete:</p>
+                      <div className="file-input-wrapper">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleResolutionUpload(e, job.id)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {job.status === 'resolved' && (
+                    <div className="job-complete-message">
+                      ✅ Job complete. Admin is verifying for payment release.
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMN 3: EMPTY FOR BALANCE */}
+        <div className="contractor-column" />
+      </div>
     </div>
   );
 }

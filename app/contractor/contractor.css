@@ -1,0 +1,422 @@
+/* Main Container */
+.contractor-container {
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.contractor-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.contractor-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.contractor-header p {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  margin-top: 8px;
+}
+
+/* Main Layout Grid */
+.contractor-layout {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 30px;
+}
+
+/* Column Styles */
+.contractor-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.column-section {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.column-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+}
+
+/* Section Headers */
+.section-header {
+  padding: 20px 24px;
+  border-bottom: 2px solid #f0f0f0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+  font-weight: 700;
+}
+
+.section-header.tenders h2 {
+  color: #667eea;
+}
+
+.section-header.proposals h2 {
+  color: #f39c12;
+}
+
+.section-header.active-repairs h2 {
+  color: #27ae60;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 40px 24px;
+  text-align: center;
+  color: #999;
+  font-size: 0.95rem;
+}
+
+/* Card Grid */
+.cards-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Tender Card */
+.tender-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+.tender-card:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+}
+
+.tender-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.tender-card p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.tender-funding {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 8px;
+  margin: 12px 0;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.apply-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+}
+
+.apply-button:hover {
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Proposal Form */
+.proposal-form {
+  margin-top: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0e6ff 100%);
+  border: 2px solid #667eea;
+  border-radius: 12px;
+}
+
+.proposal-form h4 {
+  margin: 0 0 16px 0;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.submit-proposal-button {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-proposal-button:hover {
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+}
+
+.cancel-button {
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  background: white;
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background: #ffe6e0;
+}
+
+/* Proposal Item */
+.proposal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #f39c12;
+  background: linear-gradient(135deg, #fffcf5 0%, #fff8e7 100%);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.proposal-item:hover {
+  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.2);
+}
+
+.proposal-info {
+  flex: 1;
+}
+
+.proposal-info p {
+  margin: 4px 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.proposal-info b {
+  font-weight: 600;
+}
+
+.proposal-status {
+  font-size: 0.85rem;
+  color: #f39c12;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.withdraw-button {
+  padding: 8px 16px;
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  margin-left: 16px;
+}
+
+.withdraw-button:hover {
+  background: #ffe6e0;
+  transform: scale(1.05);
+}
+
+/* Active Repair Card */
+.repair-card {
+  border: 2px solid #27ae60;
+  border-radius: 12px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e8f9f0 100%);
+  transition: all 0.3s ease;
+}
+
+.repair-card:hover {
+  box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+}
+
+.repair-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.2rem;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 8px 0;
+}
+
+.repair-card p {
+  margin: 8px 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.finish-job-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: white;
+  border: 2px dashed #27ae60;
+  border-radius: 8px;
+}
+
+.finish-job-section p {
+  margin: 0 0 12px 0;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+.file-input-wrapper input[type="file"] {
+  padding: 12px;
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.job-complete-message {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #27ae60;
+  border-radius: 8px;
+  border-left: 4px solid #27ae60;
+  margin-top: 12px;
+  font-weight: 500;
+}
+
+/* Loading State */
+.loading-container {
+  padding: 60px 20px;
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .contractor-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contractor-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .contractor-header h1 {
+    font-size: 2rem;
+  }
+
+  .proposal-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .withdraw-button {
+    margin-left: 0;
+    margin-top: 12px;
+    width: 100%;
+  }
+}
