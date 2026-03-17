@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { auditFix } from "@/app/actions/audit"; // Import the Server Action
 
 export default function ContractorPage() {
   const [availableJobs, setAvailableJobs] = useState<any[]>([]);
   const [myJobs, setMyJobs] = useState<any[]>([]);
-  const [myBids, setMyBids] = useState<any[]>([]);
+  const [myBids, setMyBids] = useState<any[]>([]); // Added state for withdrawable bids
   const [loading, setLoading] = useState(true);
-  const [isAuditing, setIsAuditing] = useState<number | null>(null); // Tracking AI progress
   const router = useRouter();
 
   // Tender Form State
@@ -30,31 +28,35 @@ export default function ContractorPage() {
       return;
     }
 
-    // 1. Fetch Available Tenders
-    const { data: available } = await supabase
+    // 1. Fetch Available Tenders (Approved & Unassigned)
+    const { data: available, error: availableError } = await supabase
       .from("issues")
       .select("*")
       .eq("status", "approved")
       .is("assigned_to", null);
 
+    if (availableError) console.error("Error fetching available:", availableError);
     setAvailableJobs(available || []);
 
     // 2. Fetch Active Jobs assigned to this contractor
-    const { data: active } = await supabase
+    const { data: active, error: activeError } = await supabase
       .from("issues")
       .select("*")
       .eq("assigned_to", user.id);
     
+    if (activeError) console.error("Error fetching active:", activeError);
     setMyJobs(active || []);
 
-    // 3. Fetch Pending Bids
-    const { data: bids } = await supabase
+    // 3. Fetch Pending Bids (for the Withdraw functionality)
+    const { data: bids, error: bidsError } = await supabase
       .from("contractor_bids")
       .select("*, issues(title)")
       .eq("contractor_id", user.id)
       .eq("bid_status", "pending");
 
+    if (bidsError) console.error("Error fetching bids:", bidsError);
     setMyBids(bids || []);
+    
     setLoading(false);
   }
 
@@ -73,135 +75,109 @@ export default function ContractorPage() {
       }]);
 
     if (error) {
-      alert("Error: " + error.message);
+      alert("Error submitting tender: " + error.message);
     } else {
-      alert("Proposal submitted!");
+      alert("Proposal submitted! The Admin will review your tender.");
       setSelectedIssue(null);
       setDays("");
       setMaterials("");
       setExperience("");
-      fetchData();
+      fetchData(); // Refresh all lists
     }
   }
 
+  // NEW: Withdraw Bid function
   async function withdrawBid(bidId: number) {
     if (!confirm("Withdraw this tender proposal?")) return;
-    const { error } = await supabase.from("contractor_bids").delete().eq("id", bidId);
-    if (!error) fetchData();
+
+    const { error } = await supabase
+      .from("contractor_bids")
+      .delete()
+      .eq("id", bidId);
+
+    if (error) {
+      alert("Error withdrawing bid");
+    } else {
+      alert("Bid withdrawn successfully");
+      fetchData(); 
+    }
   }
 
-  // UPDATED: handleResolutionUpload with AI Verification
-  async function handleResolutionUpload(e: any, job: any) {
+  async function handleResolutionUpload(e: any, issueId: number) {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsAuditing(job.id);
+    const fileName = `resolved-${Date.now()}-${file.name}`;
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("issues-images")
+      .upload(fileName, file);
 
-    try {
-      // 1. Upload "After" photo to Storage
-      const fileName = `resolved-${Date.now()}-${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("issues-images")
-        .upload(fileName, file);
+    if (uploadError) {
+      alert("Upload failed");
+      return;
+    }
 
-      if (uploadError) throw uploadError;
+    const { data: publicUrl } = supabase.storage
+      .from("issues-images")
+      .getPublicUrl(fileName);
 
-      const { data: publicUrl } = supabase.storage
-        .from("issues-images")
-        .getPublicUrl(fileName);
+    const { error: updateError } = await supabase
+      .from("issues")
+      .update({ 
+        status: "resolved",
+        resolved_image: publicUrl.publicUrl
+      })
+      .eq("id", issueId);
 
-      const afterUrl = publicUrl.publicUrl;
-
-      // 2. Call the AI Auditor
-      // We pass the original user image (job.image) and the new afterUrl
-      const auditResult = await auditFix(job.image, afterUrl);
-
-      // 3. Update the Issue in DB
-      const { error: updateError } = await supabase
-        .from("issues")
-        .update({ 
-          status: "resolved",
-          resolved_image: afterUrl,
-          ai_score: auditResult.confidence || 0,
-          ai_summary: auditResult.reason || "No summary provided"
-        })
-        .eq("id", job.id);
-
-      if (updateError) throw updateError;
-
-      if (auditResult.resolved && auditResult.confidence > 80) {
-        alert(`✅ AI Audit Success: ${auditResult.reason}`);
-      } else {
-        alert(`⚠️ AI Flagged for Review: ${auditResult.reason}`);
-      }
-
+    if (updateError) alert("Error updating status");
+    else {
+      alert("Proof of work submitted! Status is now RESOLVED.");
       fetchData();
-    } catch (err: any) {
-      console.error(err);
-      alert("Audit/Upload failed: " + err.message);
-    } finally {
-      setIsAuditing(null);
     }
   }
 
-  if (loading) return <div style={{padding: "50px", textAlign: "center"}}>Loading Contractor Portal...</div>;
+  if (loading) return <div style={{padding: "50px"}}>Loading Contractor Portal...</div>;
 
   return (
-    <div style={{ padding: "30px", maxWidth: "1000px", margin: "0 auto", fontFamily: "sans-serif", color: "#333" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-        <h1>Contractor Portal</h1>
-        <button onClick={() => router.push('/')} style={{ background: "#eee", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer" }}>Back to Site</button>
-      </header>
-      
-      <hr style={{ border: "0.5px solid #eee", marginBottom: "40px" }} />
+    <div style={{ padding: "30px", maxWidth: "1000px", margin: "0 auto", fontFamily: "sans-serif" }}>
+      <h1>Contractor Portal</h1>
+      <hr />
       
       {/* SECTION 1: AVAILABLE TENDERS */}
       <section style={{ marginBottom: "50px" }}>
-        <h2 style={{ color: "#0070f3", display: "flex", alignItems: "center", gap: "10px" }}>🏗️ Available Tenders</h2>
+        <h2 style={{ color: "#0070f3" }}>🏗️ Available Tenders</h2>
         <div style={{ display: "grid", gap: "20px" }}>
-          {availableJobs.length === 0 && <p style={{ color: "#888" }}>No new approved jobs currently available.</p>}
+          {availableJobs.length === 0 && <p>No new approved jobs currently available.</p>}
           {availableJobs.map(job => (
-            <div key={job.id} style={{ border: "1px solid #eaeaea", padding: "20px", borderRadius: "12px", backgroundColor: "#fff", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
-              <div style={{ display: "flex", gap: "20px" }}>
-                {job.image && <img src={job.image} alt="issue" style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px" }} />}
-                <div>
-                   <h3 style={{ marginTop: 0 }}>{job.title}</h3>
-                   <p style={{ color: "#666" }}>{job.description}</p>
-                   <p><b>Funding: ${job.current_funding} / ${job.funding_goal}</b></p>
-                </div>
-              </div>
+            <div key={job.id} style={{ border: "1px solid #ccc", padding: "20px", borderRadius: "8px" }}>
+              <h3>{job.title}</h3>
+              <p>{job.description}</p>
+              <p><b>Funding: ${job.current_funding} / ${job.funding_goal}</b></p>
               
               <button 
                 onClick={() => setSelectedIssue(job)} 
-                style={{ backgroundColor: "#0070f3", color: "white", padding: "10px 20px", border: "none", borderRadius: "6px", cursor: "pointer", marginTop: "15px", fontWeight: "bold" }}
+                style={{ backgroundColor: "#0070f3", color: "white", padding: "10px", border: "none", borderRadius: "5px", cursor: "pointer" }}
               >
                 Apply for Tender
               </button>
 
               {selectedIssue?.id === job.id && (
-                <div style={{ marginTop: "20px", background: "#f0f7ff", padding: "20px", border: "1px solid #0070f3", borderRadius: "8px" }}>
-                  <h4 style={{ marginTop: 0 }}>Submit Your Proposal</h4>
-                  <div style={{ display: "grid", gap: "10px" }}>
-                    <div>
-                      <label style={{ fontSize: "14px", fontWeight: "bold" }}>Days to complete:</label>
-                      <input type="number" value={days} onChange={e => setDays(e.target.value)} placeholder="e.g. 5" style={{display: "block", width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", marginTop: "5px"}} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "14px", fontWeight: "bold" }}>Materials needed:</label>
-                      <textarea value={materials} onChange={e => setMaterials(e.target.value)} placeholder="List materials..." style={{display: "block", width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", marginTop: "5px", minHeight: "60px"}} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: "14px", fontWeight: "bold" }}>Your Experience:</label>
-                      <textarea value={experience} onChange={e => setExperience(e.target.value)} placeholder="Tell us why you're a good fit..." style={{display: "block", width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc", marginTop: "5px", minHeight: "80px"}} />
-                    </div>
-                  </div>
+                <div style={{ marginTop: "20px", background: "#f9f9f9", padding: "20px", border: "1px solid #0070f3", borderRadius: "8px" }}>
+                  <h4>Submit Your Proposal</h4>
+                  <label>Days to complete:</label>
+                  <input type="number" value={days} onChange={e => setDays(e.target.value)} style={{display: "block", width: "100%", padding: "8px", marginBottom: "10px"}} />
                   
-                  <div style={{ marginTop: "15px" }}>
-                    <button onClick={() => submitTender(job.id)} style={{backgroundColor: "#28a745", color: "white", padding: "10px 20px", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold"}}>
-                      Send Tender Proposal
-                    </button>
-                    <button onClick={() => setSelectedIssue(null)} style={{marginLeft: "15px", background: "none", border: "none", color: "#ff4d4f", cursor: "pointer", fontWeight: "bold"}}>Cancel</button>
-                  </div>
+                  <label>Materials needed:</label>
+                  <textarea value={materials} onChange={e => setMaterials(e.target.value)} style={{display: "block", width: "100%", padding: "8px", marginBottom: "10px"}} />
+                  
+                  <label>Why should we hire you? (Experience):</label>
+                  <textarea value={experience} onChange={e => setExperience(e.target.value)} style={{display: "block", width: "100%", padding: "8px", marginBottom: "10px"}} />
+                  
+                  <button onClick={() => submitTender(job.id)} style={{backgroundColor: "green", color: "white", padding: "10px 20px", border: "none", borderRadius: "5px", cursor: "pointer"}}>
+                    Send Tender Proposal
+                  </button>
+                  <button onClick={() => setSelectedIssue(null)} style={{marginLeft: "10px", background: "none", border: "none", color: "red", cursor: "pointer"}}>Cancel</button>
                 </div>
               )}
             </div>
@@ -209,20 +185,20 @@ export default function ContractorPage() {
         </div>
       </section>
 
-      {/* SECTION 2: PENDING PROPOSALS */}
+      {/* SECTION 2: PENDING PROPOSALS (WITHDRAW OPTION) */}
       <section style={{ marginBottom: "50px" }}>
-        <h2 style={{ color: "#f39c12", display: "flex", alignItems: "center", gap: "10px" }}>📑 My Pending Proposals</h2>
+        <h2 style={{ color: "#f39c12" }}>📑 My Pending Proposals</h2>
         <div style={{ display: "grid", gap: "15px" }}>
-          {myBids.length === 0 && <p style={{ color: "#888" }}>No pending bids.</p>}
+          {myBids.length === 0 && <p style={{ color: "#777" }}>No pending bids.</p>}
           {myBids.map(bid => (
-            <div key={bid.id} style={{ border: "1px solid #ffe58f", padding: "15px", borderRadius: "10px", backgroundColor: "#fffbe6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={bid.id} style={{ border: "1px solid #f39c12", padding: "15px", borderRadius: "8px", backgroundColor: "#fffcf5", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <p style={{ margin: 0, fontWeight: "bold" }}>Project: {bid.issues?.title}</p>
-                <span style={{ fontSize: "13px", color: "#d48806" }}>Status: Pending Admin Review</span>
+                <p style={{ margin: 0 }}><b>Project:</b> {bid.issues?.title}</p>
+                <span style={{ fontSize: "12px", color: "#f39c12" }}>Status: Pending Admin Review</span>
               </div>
               <button 
                 onClick={() => withdrawBid(bid.id)}
-                style={{ color: "#ff4d4f", border: "1px solid #ff4d4f", background: "white", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "14px" }}
+                style={{ color: "red", border: "1px solid red", background: "white", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}
               >
                 🚫 Withdraw
               </button>
@@ -231,48 +207,27 @@ export default function ContractorPage() {
         </div>
       </section>
 
-      {/* SECTION 3: ACTIVE REPAIRS */}
+      {/* SECTION 3: ACTIVE JOBS */}
       <section>
-        <h2 style={{ color: "#28a745", display: "flex", alignItems: "center", gap: "10px" }}>🛠️ My Active Repairs</h2>
+        <h2 style={{ color: "#28a745" }}>🛠️ My Active Repairs</h2>
         <div style={{ display: "grid", gap: "20px" }}>
-          {myJobs.length === 0 && <p style={{ color: "#888" }}>You have no active projects.</p>}
+          {myJobs.length === 0 && <p>You have no active projects.</p>}
           {myJobs.map(job => (
-            <div key={job.id} style={{ border: "2px solid #e6f7ff", padding: "20px", borderRadius: "12px", backgroundColor: "#f0faff" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <h3 style={{ marginTop: 0 }}>{job.title}</h3>
-                  <p>Status: <b style={{ color: "#0070f3", textTransform: "uppercase" }}>{job.status}</b></p>
-                </div>
-                {job.image && <img src={job.image} alt="before" style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", border: "2px solid #fff" }} />}
-              </div>
+            <div key={job.id} style={{ border: "2px solid #28a745", padding: "20px", borderRadius: "8px" }}>
+              <h3>{job.title}</h3>
+              <p>Current Status: <b style={{color: "#28a745"}}>{job.status.toUpperCase()}</b></p>
               
               {job.status === 'in-progress' && (
-                <div style={{ marginTop: "20px", padding: "20px", background: "white", borderRadius: "8px", border: "1px dashed #0070f3" }}>
-                  <p style={{ marginTop: 0 }}><b>Complete Repair:</b> Please upload the "After" photo. Our AI will verify the fix against the original report.</p>
-                  
-                  {isAuditing === job.id ? (
-                    <div style={{ padding: "10px", textAlign: "center", color: "#0070f3", fontWeight: "bold" }}>
-                      🧠 AI is analyzing your work... Please wait...
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => handleResolutionUpload(e, job)} 
-                        style={{ fontSize: "14px" }}
-                      />
-                    </div>
-                  )}
+                <div style={{ marginTop: "15px", padding: "10px", border: "1px dashed #28a745" }}>
+                  <p><b>Finish Job:</b> Upload "After" photo to request payment</p>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => handleResolutionUpload(e, job.id)} 
+                  />
                 </div>
               )}
-
-              {job.status === 'resolved' && (
-                <div style={{ marginTop: "15px", color: "#28a745", fontWeight: "bold", display: "flex", alignItems: "center", gap: "5px" }}>
-                  ✅ Job submitted for final verification. 
-                  {job.ai_score && <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal" }}>(AI Score: {job.ai_score}%)</span>}
-                </div>
-              )}
+              {job.status === 'resolved' && <p>✅ Job complete. Admin is verifying for payment release.</p>}
             </div>
           ))}
         </div>
