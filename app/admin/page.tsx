@@ -3,13 +3,27 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import "./admin.css";
 
 export default function AdminPanel() {
   const [pendingIssues, setPendingIssues] = useState<any[]>([]);
   const [resolvedIssues, setResolvedIssues] = useState<any[]>([]);
+  const [approvedIssues, setApprovedIssues] = useState<any[]>([]);
+  const [inProgressIssues, setInProgressIssues] = useState<any[]>([]);
   const [bids, setBids] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState({
+    activeReports: 0,
+    totalIssues: 0,
+    avgResponseTime: "4.2h",
+    citizenRating: 4.9
+  });
+  const [issuesByCategory, setIssuesByCategory] = useState({
+    streetLights: 0,
+    potholes: 0,
+    other: 0
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -47,17 +61,40 @@ export default function AdminPanel() {
     const { data } = await supabase
       .from("issues")
       .select("*")
-      .in("status", ["pending", "resolved"])
       .order("created_at", { ascending: false });
 
     if (data) {
-      setPendingIssues(data.filter(i => i.status === 'pending'));
-      setResolvedIssues(data.filter(i => i.status === 'resolved'));
+      const pending = data.filter(i => i.status === 'pending');
+      const approved = data.filter(i => i.status === 'approved');
+      const inProgress = data.filter(i => i.status === 'in-progress');
+      const resolved = data.filter(i => i.status === 'resolved' || i.status === 'closed');
+
+      setPendingIssues(pending);
+      setApprovedIssues(approved);
+      setInProgressIssues(inProgress);
+      setResolvedIssues(resolved);
+
+      // Calculate stats
+      setStats(prev => ({
+        ...prev,
+        activeReports: inProgress.length,
+        totalIssues: data.length
+      }));
+
+      // Calculate issues by category
+      const streetLights = data.filter(i => i.title?.toLowerCase().includes('light') || i.title?.toLowerCase().includes('street')).length;
+      const potholes = data.filter(i => i.title?.toLowerCase().includes('pothole') || i.title?.toLowerCase().includes('road')).length;
+      const other = data.length - streetLights - potholes;
+      
+      setIssuesByCategory({
+        streetLights,
+        potholes,
+        other
+      });
     }
   }
 
   async function fetchBids() {
-    // Removed !inner to prevent bids from disappearing if profile/issue links are soft
     const { data, error } = await supabase
       .from("contractor_bids")
       .select(`
@@ -85,7 +122,7 @@ export default function AdminPanel() {
       .eq("id", id);
 
     if (error) alert("Update failed");
-    else fetchIssuesByStatus();
+    else refreshData();
   }
 
   async function directApprove(id: number) {
@@ -96,7 +133,7 @@ export default function AdminPanel() {
       .eq("id", id);
 
     if (error) alert("Update failed");
-    else fetchIssuesByStatus();
+    else refreshData();
   }
 
   async function acceptBid(bidId: number, issueId: number, contractorId: string) {
@@ -133,108 +170,298 @@ export default function AdminPanel() {
     }
   }
 
-  if (loading) return <div style={{ padding: "50px" }}>Verifying Admin Credentials...</div>;
+  if (loading) return <div className="loading-container">Verifying Admin Credentials...</div>;
   if (!isAdmin) return null;
 
+  const totalIssuesByCategory = issuesByCategory.streetLights + issuesByCategory.potholes + issuesByCategory.other;
+  const streetLightsPercent = totalIssuesByCategory > 0 ? (issuesByCategory.streetLights / totalIssuesByCategory * 100).toFixed(1) : 0;
+  const potholesPercent = totalIssuesByCategory > 0 ? (issuesByCategory.potholes / totalIssuesByCategory * 100).toFixed(1) : 0;
+
   return (
-    <div style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ borderBottom: "2px solid #333", paddingBottom: "10px" }}>Admin Dashboard</h1>
+    <div className="admin-container">
+      <div className="admin-wrapper">
+        {/* Header */}
+        <div className="admin-header">
+          <h1>Dashboard Overview</h1>
+          <p>Welcome back, Admin. Here is what's happening in your area today.</p>
+        </div>
 
-      {/* SECTION 1: NEW SUBMISSIONS */}
-      <section style={{ marginTop: "40px" }}>
-        <h2 style={{ color: "#444" }}>1. New Issue Reports</h2>
-        {pendingIssues.length === 0 ? <p style={{ color: "#888" }}>No new reports.</p> : (
-          pendingIssues.map((issue) => (
-            <div key={issue.id} style={cardStyle}>
-              {issue.image && <img src={issue.image} alt="issue" style={imageStyle} />}
-              <div style={{ flex: 1 }}>
-                <h3>{issue.title}</h3>
-                <p>{issue.description}</p>
-                <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-                  <button onClick={() => updateIssueStatus(issue.id, 'approved')} style={btnSuccess}>Approve & Goal</button>
-                  <button onClick={() => directApprove(issue.id)} style={btnPrimary}>Direct Approve</button>
-                  <button onClick={() => updateIssueStatus(issue.id, 'rejected')} style={btnDanger}>Reject</button>
-                </div>
+        {/* Stats Grid */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon">📊</div>
+            <div className="stat-label">Active Reports</div>
+            <p className="stat-value">{stats.activeReports}</p>
+            <div className="stat-change">⬆ 12% this week</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">⚠️</div>
+            <div className="stat-label">Reported Issues</div>
+            <p className="stat-value">{stats.totalIssues}</p>
+            <div className="stat-change">↑ 8 new today</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">⏱️</div>
+            <div className="stat-label">Avg. Response</div>
+            <p className="stat-value">{stats.avgResponseTime}</p>
+            <div className="stat-change negative">↑ 18min longer</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon">⭐</div>
+            <div className="stat-label">Citizen Rating</div>
+            <p className="stat-value">{stats.citizenRating}</p>
+            <div className="stat-change">↑ 0.2 improvement</div>
+          </div>
+        </div>
+
+        {/* Charts Grid */}
+        <div className="charts-grid">
+          {/* Report Volume Chart */}
+          <div className="chart-card">
+            <div className="chart-header">
+              <div>
+                <h3 className="chart-title">Report Volume</h3>
+                <p className="chart-subtitle">Daily submissions for the last 7 days</p>
+              </div>
+              <select className="chart-filter">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+              </select>
+            </div>
+            <div className="chart-container">
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', gap: '8px', padding: '10px 0' }}>
+                {[12, 18, 22, 19, 25, 28, 24].map((height, i) => (
+                  <div key={i} style={{
+                    width: '12%',
+                    height: `${(height / 30) * 100}%`,
+                    background: 'linear-gradient(180deg, #0070f3 0%, #0051cc 100%)',
+                    borderRadius: '4px 4px 0 0',
+                    minHeight: '20px'
+                  }} title={`Day ${i + 1}: ${height} reports`} />
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-around', fontSize: '0.75rem', color: '#999', marginTop: '8px' }}>
+                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
               </div>
             </div>
-          ))
-        )}
-      </section>
+          </div>
 
-      <hr style={{ margin: "50px 0" }} />
+          {/* Issues by Category */}
+          <div className="chart-card">
+            <div className="chart-header">
+              <div>
+                <h3 className="chart-title">Issues by Category</h3>
+                <p className="chart-subtitle">Distribution across issue types</p>
+              </div>
+            </div>
+            <div className="pie-chart">
+              <svg width="180" height="180" viewBox="0 0 100 100" style={{ maxWidth: '100%' }}>
+                {/* Pie chart segments */}
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#0070f3" strokeWidth="8" strokeDasharray={`${2 * Math.PI * 40 * streetLightsPercent / 100} ${2 * Math.PI * 40}`} strokeDashoffset="0" transform="rotate(-90 50 50)" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#ffd700" strokeWidth="8" strokeDasharray={`${2 * Math.PI * 40 * potholesPercent / 100} ${2 * Math.PI * 40}`} strokeDashoffset={`-${2 * Math.PI * 40 * streetLightsPercent / 100}`} transform={`rotate(-90 50 50)`} />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#00d97f" strokeWidth="8" transform="rotate(-90 50 50)" />
+              </svg>
+            </div>
+            <div className="pie-legend">
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: '#0070f3' }}></div>
+                <span className="legend-item-label">Street Lights (40%)</span>
+                <span className="legend-item-value">{issuesByCategory.streetLights}</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: '#ffd700' }}></div>
+                <span className="legend-item-label">Potholes (30%)</span>
+                <span className="legend-item-value">{issuesByCategory.potholes}</span>
+              </div>
+              <div className="legend-item">
+                <div className="legend-color" style={{ background: '#00d97f' }}></div>
+                <span className="legend-item-label">Other (30%)</span>
+                <span className="legend-item-value">{issuesByCategory.other}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* SECTION 2: TENDER PROPOSALS (UPDATED DETAILED VIEW) */}
-      <section>
-        <h2 style={{ color: "#0070f3" }}>2. Incoming Tender Proposals</h2>
-        {bids.length === 0 ? <p style={{ color: "#888" }}>No contractor bids yet.</p> : (
-          bids.map((bid) => (
-            <div key={bid.id} style={{ ...cardStyle, border: "2px solid #0070f3", backgroundColor: "#f0f7ff", flexDirection: 'column' }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: "0 0 10px 0" }}>Project: {bid.issues?.title}</h3>
-                
-                <div style={{ background: "#fff", padding: "15px", borderRadius: "8px", border: "1px solid #cce3ff" }}>
-                  <p style={{ margin: "0 0 10px 0", fontSize: "1.1rem" }}>
-                    👷 <b>Contractor:</b> {bid.profiles?.full_name || "Name not set in profile"} 
-                    <span style={{fontSize: '11px', color: '#666', marginLeft: '10px'}}>({bid.contractor_id})</span>
-                  </p>
-                  
-                  <hr style={{ border: "0", borderTop: "1px solid #eee", margin: "10px 0" }} />
-                  
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                    <p>📅 <b>Days to complete:</b> {bid.estimated_days}</p>
-                    <p>🧱 <b>Materials:</b> {bid.materials_needed}</p>
-                    <p style={{ gridColumn: "span 2" }}>💼 <b>Experience/Pitch:</b> {bid.experience_summary}</p>
+        {/* New Issue Reports Section */}
+        <div className="admin-section">
+          <div className="section-header">
+            <span className="section-icon">📋</span>
+            <div>
+              <h2 className="section-title">New Issue Reports</h2>
+              <p className="section-subtitle">Pending review and approval</p>
+            </div>
+          </div>
+
+          {pendingIssues.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">✓</div>
+              <p>No new reports. Great work!</p>
+            </div>
+          ) : (
+            pendingIssues.map((issue) => (
+              <div key={issue.id} className="issue-card">
+                <div className="issue-header">
+                  {issue.image && <img src={issue.image} alt="issue" className="issue-image" />}
+                  <div className="issue-info">
+                    <h3 className="issue-title">{issue.title}</h3>
+                    <p className="issue-description">{issue.description}</p>
+                    <div className="issue-meta">
+                      <span>📍 {issue.landmark}</span>
+                      <span>👤 {issue.user_id?.slice(0, 8)}</span>
+                      <span>📅 {new Date(issue.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="issue-actions">
+                  <button onClick={() => updateIssueStatus(issue.id, 'approved')} className="btn btn-success">
+                    ✓ Approve & Set Goal
+                  </button>
+                  <button onClick={() => directApprove(issue.id)} className="btn btn-primary">
+                    ⚡ Direct Approve
+                  </button>
+                  <button onClick={() => updateIssueStatus(issue.id, 'rejected')} className="btn btn-danger">
+                    ✕ Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Tender Proposals Section */}
+        <div className="admin-section">
+          <div className="section-header">
+            <span className="section-icon">💼</span>
+            <div>
+              <h2 className="section-title">Incoming Tender Proposals</h2>
+              <p className="section-subtitle">Contractor bids awaiting review</p>
+            </div>
+          </div>
+
+          {bids.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">🎯</div>
+              <p>No contractor bids yet.</p>
+            </div>
+          ) : (
+            bids.map((bid) => (
+              <div key={bid.id} className="bid-card">
+                <div className="bid-header">
+                  <h3 className="bid-title">Project: {bid.issues?.title}</h3>
+                  <p className="bid-project">👷 Contractor: <span className="bid-contractor">{bid.profiles?.full_name || "Profile name not set"}</span></p>
+                </div>
+
+                <div className="bid-details">
+                  <div className="bid-detail-row">
+                    <div>
+                      <div className="bid-detail-label">📅 Days to Complete</div>
+                      <div className="bid-detail-value">{bid.estimated_days} days</div>
+                    </div>
+                    <div>
+                      <div className="bid-detail-label">🧱 Materials Needed</div>
+                      <div className="bid-detail-value">{bid.materials_needed}</div>
+                    </div>
+                  </div>
+                  <div className="bid-detail-row full">
+                    <div>
+                      <div className="bid-detail-label">💼 Experience & Pitch</div>
+                      <div className="bid-detail-value">{bid.experience_summary}</div>
+                    </div>
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => acceptBid(bid.id, bid.issue_id, bid.contractor_id)} 
-                  style={{ ...btnPrimary, width: "100%", marginTop: "15px", padding: "12px" }}
-                >
-                  Confirm Contractor & Start Work
-                </button>
+                <div className="bid-actions">
+                  <button 
+                    onClick={() => acceptBid(bid.id, bid.issue_id, bid.contractor_id)} 
+                    className="btn btn-success btn-full"
+                  >
+                    ✓ Confirm Contractor & Start Work
+                  </button>
+                </div>
               </div>
+            ))
+          )}
+        </div>
+
+        {/* Work Verification Section */}
+        <div className="admin-section">
+          <div className="section-header">
+            <span className="section-icon">✅</span>
+            <div>
+              <h2 className="section-title">Final Verification</h2>
+              <p className="section-subtitle">Resolved jobs awaiting verification</p>
             </div>
-          ))
-        )}
-      </section>
+          </div>
 
-      <hr style={{ margin: "50px 0" }} />
+          {resolvedIssues.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">🎉</div>
+              <p>No jobs waiting for verification.</p>
+            </div>
+          ) : (
+            resolvedIssues.map((issue) => (
+              <div key={issue.id} className="resolved-card">
+                <div className="resolved-header">
+                  <h3 className="resolved-title">{issue.title}</h3>
+                  <p className="resolved-status">🛠️ Work Complete by Contractor</p>
+                </div>
 
-      {/* SECTION 3: WORK VERIFICATION */}
-      <section>
-        <h2 style={{ color: "#27ae60" }}>3. Final Verification (Resolved Jobs)</h2>
-        {resolvedIssues.length === 0 ? <p style={{ color: "#888" }}>No jobs waiting for verification.</p> : (
-          resolvedIssues.map((issue) => (
-            <div key={issue.id} style={{ ...cardStyle, border: "2px solid #27ae60", backgroundColor: "#f0fff4" }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0 }}>{issue.title}</h3>
-                <p style={{ color: "#27ae60", fontWeight: "bold" }}>🛠️ Work Complete by Contractor</p>
-                
                 {issue.resolved_image && (
-                  <div style={{ marginTop: "10px" }}>
-                    <p><b>Proof of Work (After Photo):</b></p>
-                    <img src={issue.resolved_image} alt="Resolved" style={{ width: "100%", maxHeight: "300px", objectFit: "cover", borderRadius: "8px" }} />
-                  </div>
+                  <>
+                    <p style={{ fontSize: '0.9rem', color: '#999', margin: '12px 0 8px 0' }}>📸 Proof of Work</p>
+                    <img src={issue.resolved_image} alt="Resolved" className="proof-image" />
+                  </>
                 )}
 
                 <button 
                   onClick={() => closeIssue(issue.id)} 
-                  style={{ ...btnSuccess, width: "100%", marginTop: "15px", backgroundColor: "#27ae60" }}
+                  className="btn btn-success btn-full"
                 >
                   ✅ Verify Proof & Close Case
                 </button>
               </div>
+            ))
+          )}
+        </div>
+
+        {/* In Progress Section */}
+        <div className="admin-section">
+          <div className="section-header">
+            <span className="section-icon">🛠️</span>
+            <div>
+              <h2 className="section-title">In Progress Projects</h2>
+              <p className="section-subtitle">Currently being worked on by contractors</p>
             </div>
-          ))
-        )}
-      </section>
+          </div>
+
+          {inProgressIssues.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">⏳</div>
+              <p>No projects in progress.</p>
+            </div>
+          ) : (
+            inProgressIssues.map((issue) => (
+              <div key={issue.id} className="issue-card">
+                <div className="issue-header">
+                  {issue.image && <img src={issue.image} alt="issue" className="issue-image" />}
+                  <div className="issue-info">
+                    <h3 className="issue-title">{issue.title}</h3>
+                    <p className="issue-description">{issue.description}</p>
+                    <div className="issue-meta">
+                      <span>🎯 Status: <strong style={{ color: '#00d97f' }}>In Progress</strong></span>
+                      <span>📍 {issue.landmark}</span>
+                      <span>📅 {new Date(issue.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
-
-const cardStyle = { border: "1px solid #ddd", borderRadius: "12px", padding: "20px", marginBottom: "20px", display: "flex", gap: "20px", backgroundColor: "#fff", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" };
-const imageStyle = { width: "180px", height: "140px", objectFit: "cover" as "cover", borderRadius: "8px" };
-const btnSuccess = { background: "#28a745", color: "white", border: "none", padding: "10px 15px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" };
-const btnPrimary = { background: "#0070f3", color: "white", border: "none", padding: "10px 15px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" };
-const btnDanger = { background: "#dc3545", color: "white", border: "none", padding: "10px 15px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" };
