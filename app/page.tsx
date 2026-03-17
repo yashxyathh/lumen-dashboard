@@ -148,71 +148,81 @@ export default function Home() {
 
       {visibleIssues.map((issue) => (
         <div key={issue.id} className="issue-card">
-          {issue.image && <img src={issue.image} width="100%" alt="issue" className="issue-image" />}
-
-          <h2 className="issue-title">{issue.title}</h2>
-          <p className="issue-description">{issue.description}</p>
-          <p className="issue-landmark">📍 <b>Landmark:</b> {issue.landmark}</p>
-
-          <div className="funding-section">
-            <p className="funding-label"><b>Funding Progress:</b></p>
-            <div className="progress-bar-container">
-              <div className="progress-bar-fill" style={{
-                width: `${Math.min(((issue.current_funding || 0) / (issue.funding_goal || 1)) * 100, 100)}%`
-              }}></div>
-            </div>
-            <p className="funding-amount">
-              ${issue.current_funding || 0} raised of ${issue.funding_goal || 0}
-            </p>
-
-            <div className="action-buttons">
-              {(!userRole || userRole === 'user') && issue.current_funding < issue.funding_goal && (
-                <button
-                  onClick={() => handleDonate(issue.id, issue.current_funding)}
-                  className="btn-donate"
-                >
-                  💰 Donate
-                </button>
-              )}
-
-              {userRole === 'contractor' && !issue.assigned_to && (
-                <button
-                  onClick={() => router.push('/contractor')}
-                  className="btn-tender"
-                >
-                  🏗️ Apply for Tender
-                </button>
-              )}
-
-              {issue.assigned_to && issue.status !== 'resolved' && (
-                <span className="status-in-progress">🛠️ Work in Progress...</span>
-              )}
-
-              {issue.status === 'resolved' && (
-                <span className="status-resolved">✅ Issue Resolved!</span>
-              )}
-            </div>
-          </div>
-
-          <div className="issue-footer">
-            <div className="upvote-section">
-              <button onClick={() => handleUpvote(issue.id)} className="btn-upvote">
-                👍 Upvote
-              </button>
-              <span className="vote-count">{issue.upvotes || 0} votes</span>
-            </div>
-
-            {currentUserId && issue.user_id === currentUserId && (
-              <div className="user-actions">
-                <span className="user-indicator">You reported this</span>
-                <button
-                  onClick={() => deleteIssue(issue.id, issue.user_id)}
-                  className="btn-delete"
-                >
-                  🗑️ Delete
-                </button>
+          <div className="issue-content-wrapper">
+            {issue.image && (
+              <div className="issue-image-container">
+                <img src={issue.image} alt="issue" className="issue-image" />
               </div>
             )}
+
+            <div className="issue-details">
+              <div className="issue-header">
+                <h2 className="issue-title">{issue.title}</h2>
+                <p className="issue-landmark">📍 {issue.landmark}</p>
+              </div>
+
+              <p className="issue-description">{issue.description}</p>
+
+              <div className="funding-section">
+                <div className="funding-header">
+                  <span className="funding-label">Funding Progress</span>
+                  <span className="funding-amount">
+                    ${issue.current_funding || 0} / ${issue.funding_goal || 0}
+                  </span>
+                </div>
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{
+                    width: `${Math.min(((issue.current_funding || 0) / (issue.funding_goal || 1)) * 100, 100)}%`
+                  }}></div>
+                </div>
+              </div>
+
+              <div className="issue-footer">
+                <div className="footer-left">
+                  <button onClick={() => handleUpvote(issue.id)} className="btn-upvote">
+                    👍 Upvote
+                  </button>
+                  <span className="vote-count">{issue.upvotes || 0} votes</span>
+                </div>
+
+                <div className="action-buttons">
+                  {(!userRole || userRole === 'user') && issue.current_funding < issue.funding_goal && (
+                    <button
+                      onClick={() => handleDonate(issue.id, issue.current_funding)}
+                      className="btn-donate"
+                    >
+                      💰 Donate
+                    </button>
+                  )}
+
+                  {userRole === 'contractor' && !issue.assigned_to && (
+                    <button
+                      onClick={() => router.push('/contractor')}
+                      className="btn-tender"
+                    >
+                      🏗️ Apply
+                    </button>
+                  )}
+
+                  {issue.assigned_to && issue.status !== 'resolved' && (
+                    <span className="status-in-progress">🛠️ In Progress</span>
+                  )}
+
+                  {issue.status === 'resolved' && (
+                    <span className="status-resolved">✅ Resolved</span>
+                  )}
+
+                  {currentUserId && issue.user_id === currentUserId && (
+                    <button
+                      onClick={() => deleteIssue(issue.id, issue.user_id)}
+                      className="btn-delete"
+                    >
+                      🗑️ Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       ))}

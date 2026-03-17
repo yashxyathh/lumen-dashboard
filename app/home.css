@@ -68,11 +68,12 @@
 .issue-card {
   background: white;
   border-radius: 14px;
-  padding: 24px;
+  padding: 0;
   margin-top: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
   border: 1px solid #f0f0f0;
+  overflow: hidden;
 }
 
 .issue-card:hover {
@@ -80,122 +81,150 @@
   transform: translateY(-2px);
 }
 
+.issue-content-wrapper {
+  display: flex;
+  gap: 0;
+  height: 100%;
+}
+
+.issue-image-container {
+  flex-shrink: 0;
+  width: 280px;
+  height: 280px;
+  overflow: hidden;
+}
+
 .issue-image {
-  border-radius: 10px;
-  max-height: 400px;
-  object-fit: cover;
   width: 100%;
-  margin-bottom: 20px;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
+.issue-details {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-header {
+  margin-bottom: 12px;
+}
+
 .issue-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.issue-landmark {
+  color: #999;
+  font-size: 13px;
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 .issue-description {
   color: #555;
-  font-size: 15px;
-  line-height: 1.6;
-  margin: 0 0 16px 0;
-}
-
-.issue-landmark {
-  color: #666;
   font-size: 14px;
-  margin: 0 0 20px 0;
+  line-height: 1.6;
+  margin: 12px 0 16px 0;
+  flex: 1;
 }
 
 .funding-section {
-  margin: 24px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f5f8 100%);
-  border-radius: 12px;
-  border: 1px solid #e8eaed;
+  margin: 14px 0;
+}
+
+.funding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .funding-label {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 12px 0;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
+.funding-amount {
+  font-size: 13px;
+  color: #28a745;
+  font-weight: 700;
+}
+
 .progress-bar-container {
   width: 100%;
-  height: 10px;
-  background: #e0e0e0;
-  border-radius: 6px;
+  height: 8px;
+  background: #e8e8e8;
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 12px;
 }
 
 .progress-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
-  border-radius: 6px;
+  border-radius: 4px;
   transition: width 0.4s ease;
-}
-
-.funding-amount {
-  font-size: 13px;
-  color: #666;
-  margin: 0;
-  font-weight: 500;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .btn-donate,
 .btn-tender {
-  padding: 10px 18px;
+  padding: 8px 14px;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   transition: all 0.3s ease;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .btn-donate {
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
 }
 
 .btn-donate:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(40, 167, 69, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .btn-tender {
   background: linear-gradient(135deg, #0070f3 0%, #0051cc 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 112, 243, 0.2);
 }
 
 .btn-tender:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0, 112, 243, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3);
 }
 
 .status-in-progress,
 .status-resolved {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .status-in-progress {
@@ -209,8 +238,8 @@
 }
 
 .issue-footer {
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: auto;
+  padding-top: 14px;
   border-top: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
@@ -219,17 +248,17 @@
   gap: 12px;
 }
 
-.upvote-section {
+.footer-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-upvote {
-  padding: 7px 14px;
+  padding: 6px 12px;
   border: 2px solid #ddd;
   background: white;
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
@@ -240,23 +269,23 @@
 .btn-upvote:hover {
   border-color: #1a1a1a;
   background: #f9f9f9;
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .vote-count {
   color: #666;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .user-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .user-indicator {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
   font-style: italic;
 }
@@ -266,9 +295,9 @@
   color: #dc3545;
   background: white;
   border: 1.5px solid #dc3545;
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   transition: all 0.3s ease;
   font-family: inherit;
@@ -278,6 +307,21 @@
   background: rgba(220, 53, 69, 0.05);
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
+}
+
+@media (max-width: 768px) {
+  .issue-content-wrapper {
+    flex-direction: column;
+  }
+
+  .issue-image-container {
+    width: 100%;
+    height: 240px;
+  }
+
+  .issue-details {
+    padding: 18px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -300,12 +344,28 @@
   }
 
   .issue-card {
-    padding: 16px;
     margin-top: 16px;
   }
 
+  .issue-content-wrapper {
+    flex-direction: column;
+  }
+
+  .issue-image-container {
+    width: 100%;
+    height: 200px;
+  }
+
+  .issue-details {
+    padding: 16px;
+  }
+
   .issue-title {
-    font-size: 18px;
+    font-size: 17px;
+  }
+
+  .issue-description {
+    font-size: 13px;
   }
 
   .issue-footer {
@@ -313,12 +373,16 @@
     align-items: flex-start;
   }
 
-  .user-actions {
+  .footer-left {
     width: 100%;
   }
 
-  .btn-delete {
+  .action-buttons {
     width: 100%;
-    justify-content: center;
+  }
+
+  .btn-donate,
+  .btn-tender {
+    flex: 1;
   }
 }
