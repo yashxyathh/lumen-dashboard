@@ -67,7 +67,7 @@ export default function AdminPanel() {
       const pending = data.filter(i => i.status === 'pending');
       const approved = data.filter(i => i.status === 'approved');
       const inProgress = data.filter(i => i.status === 'in-progress');
-      const resolved = data.filter(i => i.status === 'resolved' || i.status === 'closed');
+      const resolved = data.filter(i => i.status === 'resolved');
 
       setPendingIssues(pending);
       setApprovedIssues(approved);
