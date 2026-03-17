@@ -112,52 +112,73 @@ export default function MyReports() {
                 <button className="btn-add-comment">+ Add Comment</button>
               </div>
 
-              {selectedReport.image && (
-                <div className="detail-image-container">
-                  <img src={selectedReport.image} alt="issue" className="detail-image" />
-                </div>
-              )}
-
               <div className="detail-content">
-                <div className="content-section">
-                  <h3>Description</h3>
-                  <p>{selectedReport.description}</p>
-                </div>
+                <div className="content-wrapper">
+                  {/* Left Side - Image and Description */}
+                  <div className="content-left">
+                    {selectedReport.image && (
+                      <div className="detail-image-container-small">
+                        <img src={selectedReport.image} alt="issue" className="detail-image-small" />
+                      </div>
+                    )}
 
-                <div className="content-section">
-                  <p className="landmark-info">
-                    📍 {selectedReport.landmark}
-                  </p>
-                </div>
+                    <div className="content-section">
+                      <h3>Description</h3>
+                      <p>{selectedReport.description}</p>
+                    </div>
 
-                {/* Ticket Progress */}
-                <div className="progress-container">
-                  <h3>Ticket Progress</h3>
-                  <div className="progress-steps">
-                    <div className={`progress-step ${['pending', 'approved', 'in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
-                      <div className="progress-dot">●</div>
-                      <p>Reported</p>
-                      <span>Issue submitted by user</span>
+                    <div className="content-section">
+                      <p className="landmark-info">
+                        📍 {selectedReport.landmark}
+                      </p>
                     </div>
-                    <div className={`progress-step ${['approved', 'in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
-                      <div className="progress-dot">●</div>
-                      <p>Under Review</p>
-                      <span>Technician evaluating the report</span>
-                    </div>
-                    <div className={`progress-step ${['in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
-                      <div className="progress-dot">●</div>
-                      <p>Assigned</p>
-                      <span>Work assigned to contractor</span>
-                    </div>
-                    <div className={`progress-step ${['resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
-                      <div className="progress-dot">●</div>
-                      <p>Resolved</p>
-                      <span>Issue fixed and verified</span>
+                  </div>
+
+                  {/* Right Side - Ticket Progress */}
+                  <div className="content-right">
+                    <div className="progress-container-right">
+                      <h3>Ticket Progress</h3>
+                      <div className="progress-steps">
+                        <div className={`progress-step ${['pending', 'approved', 'in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                          <div className="progress-dot">●</div>
+                          <div className="progress-step-text">
+                            <p>Reported</p>
+                            <span>Issue submitted by user</span>
+                          </div>
+                        </div>
+                        <div className={`progress-step ${['approved', 'in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                          <div className="progress-dot">●</div>
+                          <div className="progress-step-text">
+                            <p>Under Review</p>
+                            <span>Technician evaluating the report</span>
+                          </div>
+                        </div>
+                        <div className={`progress-step ${['in-progress', 'resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                          <div className="progress-dot">●</div>
+                          <div className="progress-step-text">
+                            <p>Assigned</p>
+                            <span>Work assigned to contractor</span>
+                          </div>
+                        </div>
+                        <div className={`progress-step ${['resolved', 'closed'].includes(selectedReport.status) ? 'active' : ''}`}>
+                          <div className="progress-dot">●</div>
+                          <div className="progress-step-text">
+                            <p>Resolved</p>
+                            <span>Issue fixed and verified</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedReport.status !== 'closed' && selectedReport.status !== 'rejected' && (
+                        <p className="estimated-resolution">
+                          ⏰ Estimated resolution: {new Date(new Date(selectedReport.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Funding Progress for Approved */}
+                {/* Funding Progress for Approved - Full Width Below */}
                 {selectedReport.status === 'approved' && (
                   <div className="funding-container">
                     <h3>Funding Progress</h3>
@@ -173,12 +194,6 @@ export default function MyReports() {
                       />
                     </div>
                   </div>
-                )}
-
-                {selectedReport.status !== 'closed' && selectedReport.status !== 'rejected' && (
-                  <p className="estimated-resolution">
-                    ⏰ Estimated resolution: {new Date(new Date(selectedReport.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                  </p>
                 )}
               </div>
             </div>

@@ -194,23 +194,39 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.detail-image-container {
-  width: 100%;
-  height: 320px;
-  overflow: hidden;
-  border-bottom: 1px solid #f0f0f0;
+.detail-content {
+  padding: 32px;
+  flex: 1;
+  overflow-y: auto;
 }
 
-.detail-image {
+.content-wrapper {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 28px;
+}
+
+.content-left {
+  flex: 0 0 280px;
+}
+
+.detail-image-container-small {
+  width: 280px;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.detail-image-small {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.detail-content {
-  padding: 32px;
+.content-right {
   flex: 1;
-  overflow-y: auto;
 }
 
 .content-section {
@@ -240,11 +256,14 @@
   font-weight: 500;
 }
 
-.progress-container {
-  margin: 28px 0;
+.progress-container-right {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
 }
 
-.progress-container h3 {
+.progress-container-right h3 {
   font-size: 15px;
   font-weight: 700;
   color: #1a1a1a;
@@ -256,15 +275,15 @@
 .progress-steps {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .progress-step {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: #f9f9f9;
+  gap: 10px;
+  padding: 10px;
+  background: white;
   border-radius: 8px;
   border-left: 3px solid #e0e0e0;
   transition: all 0.3s ease;
@@ -276,26 +295,29 @@
 }
 
 .progress-dot {
-  font-size: 20px;
+  font-size: 18px;
   color: #999;
-  margin-top: -2px;
+  margin-top: 0px;
   flex-shrink: 0;
-  margin-right: 4px;
 }
 
 .progress-step.active .progress-dot {
   color: #0070f3;
 }
 
+.progress-step-text {
+  flex: 1;
+}
+
 .progress-step p {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0 0 2px 0;
 }
 
 .progress-step span {
-  font-size: 11px;
+  font-size: 10px;
   color: #999;
   margin: 0;
 }
@@ -341,13 +363,14 @@
 }
 
 .estimated-resolution {
-  font-size: 12px;
-  color: #999;
-  margin-top: 20px;
-  padding: 12px;
-  background: #f9f9f9;
+  font-size: 11px;
+  color: #f39c12;
+  margin-top: 14px;
+  padding: 10px;
+  background: rgba(243, 156, 18, 0.05);
   border-radius: 6px;
   border-left: 3px solid #f39c12;
+  font-weight: 500;
 }
 
 /* Scrollbar styling */
@@ -388,6 +411,19 @@
     flex: 1;
     min-height: 500px;
   }
+
+  .content-wrapper {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .content-left {
+    flex: 0 0 auto;
+  }
+
+  .detail-image-container-small {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -397,6 +433,7 @@
 
   .reports-wrapper {
     gap: 12px;
+    flex-direction: column;
   }
 
   .reports-sidebar {
@@ -420,8 +457,18 @@
     padding: 16px;
   }
 
-  .detail-image-container {
-    height: 240px;
+  .content-wrapper {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .content-left {
+    flex: 0 0 auto;
+  }
+
+  .detail-image-container-small {
+    width: 100%;
+    height: 200px;
   }
 
   .detail-title {
@@ -449,6 +496,20 @@
 
   .detail-content {
     padding: 12px;
+  }
+
+  .content-wrapper {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .content-left {
+    flex: 0 0 auto;
+  }
+
+  .detail-image-container-small {
+    width: 100%;
+    height: 180px;
   }
 
   .detail-title {
