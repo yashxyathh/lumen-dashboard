@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.99.2",
     "axios": "^1.13.6",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",

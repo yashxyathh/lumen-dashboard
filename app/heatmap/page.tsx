@@ -1,120 +1,110 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useState, useRef } from "react";
-import "../../components/MapFix";
-
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false }
-);
-
-const Popup = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Popup),
-  { ssr: false }
-);
-
+import dynamic from "next/dynamic";
+import { supabase } from "@/lib/supabase";
 import "leaflet/dist/leaflet.css";
 
+// 1. DYNAMIC IMPORTS (No SSR)
+const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false });
+
 export default function HeatmapPage() {
+  const [issues, setIssues] = useState<any[]>([]);
+  const [map, setMap] = useState<any>(null); // Use state for the map instance
 
-  const [issues,setIssues] = useState<any[]>([]);
-  const mapRef = useRef<any>(null);
+  // 2. FETCH DATA FROM SUPABASE
+  useEffect(() => {
+    async function fetchIssues() {
+      const { data, error } = await supabase
+        .from("issues")
+        .select("*");
 
-  useEffect(()=>{
-
-    const stored = localStorage.getItem("issues");
-
-    if(stored){
-      setIssues(JSON.parse(stored));
+      if (error) {
+        console.error("Error fetching issues:", error);
+      } else {
+        setIssues(data || []);
+      }
     }
+    fetchIssues();
+  }, []);
 
-  },[]);
-
-  useEffect(()=>{
-    if(!mapRef.current) return;
-    
+  // 3. FIX INVISIBLE MARKER ICONS
+  useEffect(() => {
     const L = require("leaflet");
-
-    require("leaflet.heat");
-    
-    const heatPoints = issues
-        .filter(i => i.location)
-        .map(i => [
-            i.location.lat,
-            i.location.lng,
-            1
-        ]);
-
-    const heat = L.heatLayer(heatPoints,{
-        radius:60,
-        blur:40
+    // This fixes the missing icon issue in Next.js
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+      iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+      shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
     });
-    
-    heat.addTo(mapRef.current);
-  },[issues]);
+  }, []);
+
+  // 4. ADD HEATMAP LAYER
+  useEffect(() => {
+    if (!map || issues.length === 0) return;
+
+    const L = require("leaflet");
+    require("leaflet.heat");
+
+    const heatPoints = issues
+      .filter(i => i.latitude && i.longitude)
+      .map(i => [i.latitude, i.longitude, 0.5]); // Latitude, Longitude, Intensity
+
+    const heatLayer = (L as any).heatLayer(heatPoints, {
+      radius: 40,
+      blur: 25,
+      maxZoom: 17,
+    });
+
+    heatLayer.addTo(map);
+
+    // Cleanup when component unmounts
+    return () => {
+      if (map) map.removeLayer(heatLayer);
+    };
+  }, [map, issues]);
 
   return (
+    <div style={{ padding: "20px" }}>
+      <h1>Issue Map & Heatmap</h1>
+      <p>Red glows indicate areas with more reported issues.</p>
 
-    <div style={{padding:"20px"}}>
+      <div style={{ height: "600px", width: "100%", borderRadius: "10px", overflow: "hidden" }}>
+        <MapContainer
+          center={[12.934, 80.142]} // Matches your previous coordinates
+          zoom={13}
+          style={{ height: "100%", width: "100%" }}
+          ref={setMap} // Correct way to get the map instance in newer React-Leaflet
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-      <h1>Issue Map</h1>
-
-      <MapContainer
-        center={[12.934,80.142]}
-        zoom={14}
-        style={{height:"600px", width:"100%"}}
-        whenCreated={(map)=> mapRef.current = map}
-    >
-
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        {issues.map((issue,index)=>(
-
-          issue.location && (
-
-            <Marker
-              key={index}
-              position={[
-                issue.location.lat,
-                issue.location.lng
-              ]}
-            >
-
-              <Popup>
-
-                <b>{issue.title}</b>
-
-                <br/>
-
-                {issue.description}
-
-                <br/>
-
-                Landmark: {issue.landmark}
-
-              </Popup>
-
-            </Marker>
-
-          )
-
-        ))}
-
-      </MapContainer>
-
+          {issues.map((issue) => (
+            issue.latitude && issue.longitude && (
+              <Marker 
+                key={issue.id} 
+                position={[issue.latitude, issue.longitude]}
+              >
+                <Popup>
+                  <div style={{ minWidth: "150px" }}>
+                    {issue.image && (
+                      <img src={issue.image} width="100%" style={{ borderRadius: "4px" }} />
+                    )}
+                    <h3>{issue.title}</h3>
+                    <p>{issue.description}</p>
+                    <small><b>Landmark:</b> {issue.landmark}</small>
+                    <br />
+                    <small><b>Votes:</b> {issue.upvotes || 0}</small>
+                  </div>
+                </Popup>
+              </Marker>
+            )
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 }
