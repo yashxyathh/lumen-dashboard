@@ -1,14 +1,14 @@
 /* Main Container */
 .contractor-container {
   padding: 40px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f3f8 100%);
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .contractor-header {
   text-align: center;
-  color: white;
+  color: #1a1a1a;
   margin-bottom: 40px;
 }
 
@@ -16,12 +16,13 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
 }
 
 .contractor-header p {
   font-size: 1.1rem;
-  opacity: 0.95;
+  color: #666;
   margin-top: 8px;
 }
 
@@ -67,12 +68,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #333;
+  color: #1a1a1a;
   font-weight: 700;
 }
 
 .section-header.tenders h2 {
-  color: #667eea;
+  color: #0070f3;
 }
 
 .section-header.proposals h2 {
@@ -80,7 +81,7 @@
 }
 
 .section-header.active-repairs h2 {
-  color: #27ae60;
+  color: #28a745;
 }
 
 /* Empty State */
@@ -101,30 +102,50 @@
 
 /* Tender Card */
 .tender-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid #f0f0f0;
   border-radius: 12px;
-  padding: 20px;
+  padding: 0;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: white;
   cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .tender-card:hover {
-  border-color: #667eea;
-  background: #f8f9ff;
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+  border-color: #0070f3;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.tender-image-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.tender-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tender-card-content {
+  padding: 20px;
 }
 
 .tender-card h3 {
   margin: 0 0 10px 0;
   font-size: 1.2rem;
-  color: #333;
+  color: #1a1a1a;
   font-weight: 600;
 }
 
 .tender-card p {
   margin: 8px 0;
-  color: #666;
+  color: #555;
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -134,17 +155,18 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  background: #f9f9f9;
   border-radius: 8px;
   margin: 12px 0;
   font-weight: 600;
-  color: #667eea;
+  color: #28a745;
+  border: 1px solid #f0f0f0;
 }
 
 .apply-button {
   width: 100%;
   padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0070f3 0%, #0051cc 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -152,25 +174,26 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 12px;
+  box-shadow: 0 1px 4px rgba(0, 112, 243, 0.2);
 }
 
 .apply-button:hover {
-  transform: scale(1.02);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.3);
 }
 
 /* Proposal Form */
 .proposal-form {
   margin-top: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0e6ff 100%);
-  border: 2px solid #667eea;
+  background: #f9f9f9;
+  border: 2px solid #0070f3;
   border-radius: 12px;
 }
 
 .proposal-form h4 {
   margin: 0 0 16px 0;
-  color: #667eea;
+  color: #0070f3;
   font-size: 1.1rem;
 }
 
@@ -201,8 +224,8 @@
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #0070f3;
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
 }
 
 .form-group textarea {
@@ -219,18 +242,19 @@
 .submit-proposal-button {
   flex: 1;
   padding: 12px;
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
 }
 
 .submit-proposal-button:hover {
-  transform: scale(1.02);
-  box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
 }
 
 .cancel-button {
@@ -306,33 +330,36 @@
 
 /* Active Repair Card */
 .repair-card {
-  border: 2px solid #27ae60;
+  border: 2px solid #28a745;
   border-radius: 12px;
   padding: 20px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #e8f9f0 100%);
+  background: white;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .repair-card:hover {
-  box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .repair-card h3 {
   margin: 0 0 12px 0;
   font-size: 1.2rem;
-  color: #27ae60;
+  color: #1a1a1a;
   font-weight: 600;
 }
 
 .status-badge {
   display: inline-block;
   padding: 6px 12px;
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   margin: 8px 0;
+  box-shadow: 0 1px 4px rgba(40, 167, 69, 0.2);
 }
 
 .repair-card p {
@@ -345,13 +372,13 @@
   margin-top: 16px;
   padding: 16px;
   background: white;
-  border: 2px dashed #27ae60;
+  border: 2px dashed #28a745;
   border-radius: 8px;
 }
 
 .finish-job-section p {
   margin: 0 0 12px 0;
-  color: #27ae60;
+  color: #28a745;
   font-weight: 600;
 }
 
@@ -364,7 +391,7 @@
 
 .file-input-wrapper input[type="file"] {
   padding: 12px;
-  border: 2px solid #27ae60;
+  border: 2px solid #28a745;
   border-radius: 8px;
   cursor: pointer;
   width: 100%;
@@ -373,10 +400,10 @@
 
 .job-complete-message {
   padding: 12px 16px;
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  color: #27ae60;
+  background: #f0f8f5;
+  color: #28a745;
   border-radius: 8px;
-  border-left: 4px solid #27ae60;
+  border-left: 4px solid #28a745;
   margin-top: 12px;
   font-weight: 500;
 }
@@ -385,9 +412,9 @@
 .loading-container {
   padding: 60px 20px;
   text-align: center;
-  color: white;
+  color: #666;
   font-size: 1.2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f3f8 100%);
   min-height: 100vh;
 }
 

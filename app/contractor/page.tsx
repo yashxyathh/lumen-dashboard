@@ -153,19 +153,26 @@ export default function ContractorPage() {
               {availableJobs.length === 0 && <div className="empty-state">No new approved tenders available</div>}
               {availableJobs.map(job => (
                 <div key={job.id} className="tender-card">
-                  <h3>{job.title}</h3>
-                  <p>{job.description}</p>
-                  <div className="tender-funding">
-                    <span>Funding Progress</span>
-                    <span>${job.current_funding} / ${job.funding_goal}</span>
-                  </div>
+                  {job.image && (
+                    <div className="tender-image-container">
+                      <img src={job.image} alt={job.title} className="tender-image" />
+                    </div>
+                  )}
+                  <div className="tender-card-content">
+                    <h3>{job.title}</h3>
+                    <p>{job.description}</p>
+                    <div className="tender-funding">
+                      <span>Funding Progress</span>
+                      <span>${job.current_funding} / ${job.funding_goal}</span>
+                    </div>
 
-                  <button
-                    className="apply-button"
-                    onClick={() => setSelectedIssue(job)}
-                  >
-                    Apply for Tender
-                  </button>
+                    <button
+                      className="apply-button"
+                      onClick={() => setSelectedIssue(job)}
+                    >
+                      Apply for Tender
+                    </button>
+                  </div>
 
                   {selectedIssue?.id === job.id && (
                     <div className="proposal-form">
